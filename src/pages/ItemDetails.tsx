@@ -4,245 +4,138 @@ import { useParams, Link } from 'react-router-dom';
 import Layout from '@/components/layout/Layout';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { 
-  Card, 
-  CardContent, 
-  CardDescription, 
-  CardFooter, 
-  CardHeader, 
-  CardTitle 
-} from '@/components/ui/card';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { ItemProps } from '@/components/items/ItemCard';
-import ItemGrid from '@/components/items/ItemGrid';
-import NotFound from './NotFound';
+import { Card } from '@/components/ui/card';
+import { itemService } from '@/backend/services/itemService';
+import { IItem } from '@/backend/models/Item';
+import { useAuth } from '@/hooks/useAuth';
 
 const ItemDetails: React.FC = () => {
   const { id } = useParams<{ id: string }>();
-  const [item, setItem] = useState<ItemProps | null>(null);
+  const [item, setItem] = useState<IItem | null>(null);
   const [loading, setLoading] = useState(true);
-  
+  const [error, setError] = useState<string | null>(null);
+  const { isAuthenticated } = useAuth();
+
   useEffect(() => {
-    // Simulate API call to fetch item details
     const fetchItem = async () => {
-      setLoading(true);
-      
-      // Mock item data - In a real app, this would come from your API
-      const mockItems: Record<string, ItemProps> = {
-        '1': {
-          id: '1',
-          title: 'Vintage Record Player',
-          description: 'Fully functional vintage record player in excellent condition. Perfect for vinyl enthusiasts. Features three-speed playback (33, 45, and 78 RPM), built-in speakers, and an authentic retro design. The needle was recently replaced and all mechanical components are in working order. Great sound quality for a vintage piece.',
-          category: 'Electronics',
-          condition: 'Good',
-          imageUrl: 'https://images.unsplash.com/photo-1618160702438-9b02ab6515c9',
-          location: 'Portland, OR',
-          ownerId: 'user1',
-          ownerName: 'Alex Johnson'
-        },
-        '2': {
-          id: '2',
-          title: 'Mid-Century Modern Sofa',
-          description: 'Beautiful 3-seater sofa in teal blue. Minimal wear and very comfortable.',
-          category: 'Furniture',
-          condition: 'Like New',
-          imageUrl: 'https://images.unsplash.com/photo-1721322800607-8c38375eef04',
-          location: 'Seattle, WA',
-          ownerId: 'user2',
-          ownerName: 'Jamie Smith'
-        },
-      };
-      
-      // Simulate network delay
-      await new Promise(resolve => setTimeout(resolve, 500));
-      
-      if (id && mockItems[id]) {
-        setItem(mockItems[id]);
+      if (!id) {
+        setError('Item ID is missing');
+        setLoading(false);
+        return;
       }
       
-      setLoading(false);
+      try {
+        const fetchedItem = await itemService.getItemById(id);
+        if (fetchedItem) {
+          setItem(fetchedItem);
+        } else {
+          setError('Item not found');
+        }
+      } catch (err) {
+        console.error('Error fetching item details:', err);
+        setError('Failed to load item details');
+      } finally {
+        setLoading(false);
+      }
     };
     
     fetchItem();
   }, [id]);
-  
-  // Mock similar items
-  const similarItems: ItemProps[] = [
-    {
-      id: '5',
-      title: 'Digital SLR Camera',
-      description: 'Canon EOS Rebel T7 with 18-55mm lens. Lightly used with all accessories.',
-      category: 'Electronics',
-      condition: 'Like New',
-      imageUrl: 'https://images.unsplash.com/photo-1618160702438-9b02ab6515c9',
-      location: 'Chicago, IL',
-      ownerId: 'user5',
-      ownerName: 'Casey Brown'
-    },
-    {
-      id: '6',
-      title: 'Board Game Collection',
-      description: 'Collection of 5 popular strategy games. All complete with all pieces.',
-      category: 'Toys & Games',
-      condition: 'Good',
-      imageUrl: 'https://images.unsplash.com/photo-1472396961693-142e6e269027',
-      location: 'Boston, MA',
-      ownerId: 'user6',
-      ownerName: 'Taylor Green'
-    },
-  ];
 
   if (loading) {
     return (
       <Layout>
-        <div className="container px-4 md:px-6 py-8 flex justify-center items-center min-h-[60vh]">
-          <div className="text-center">
-            <div className="inline-block h-8 w-8 animate-spin rounded-full border-4 border-solid border-swapspace-green-DEFAULT border-r-transparent align-[-0.125em] motion-reduce:animate-[spin_1.5s_linear_infinite]" />
-            <p className="mt-4 text-gray-500">Loading item details...</p>
+        <div className="container px-4 md:px-6 py-8">
+          <div className="flex justify-center items-center min-h-[400px]">
+            <p className="text-lg">Loading item details...</p>
           </div>
         </div>
       </Layout>
     );
   }
 
-  if (!item) {
-    return <NotFound />;
+  if (error || !item) {
+    return (
+      <Layout>
+        <div className="container px-4 md:px-6 py-8">
+          <Card className="p-6 text-center">
+            <h2 className="text-2xl font-bold mb-4">Error</h2>
+            <p className="mb-6">{error || 'Item not found'}</p>
+            <Button asChild>
+              <Link to="/browse">Back to Browse</Link>
+            </Button>
+          </Card>
+        </div>
+      </Layout>
+    );
   }
 
   return (
     <Layout>
       <div className="container px-4 md:px-6 py-8">
-        <div className="mb-6">
-          <Link to="/browse" className="text-swapspace-green-DEFAULT hover:underline flex items-center gap-2">
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              width="16"
-              height="16"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            >
-              <path d="m15 18-6-6 6-6"/>
-            </svg>
-            Back to Browse
-          </Link>
-        </div>
-        
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
           {/* Item Image */}
           <div>
-            <div className="rounded-lg overflow-hidden bg-gray-100">
-              <img
-                src={item.imageUrl}
-                alt={item.title}
-                className="w-full h-auto object-cover"
+            <div className="rounded-lg overflow-hidden">
+              <img 
+                src={item.imageUrl} 
+                alt={item.title} 
+                className="w-full h-auto object-cover" 
               />
             </div>
           </div>
           
           {/* Item Details */}
-          <div className="space-y-6">
-            <div>
-              <div className="flex items-center justify-between mb-2">
-                <h1 className="text-3xl font-bold">{item.title}</h1>
-                <Badge>{item.condition}</Badge>
-              </div>
-              <div className="flex items-center gap-4 text-gray-500">
-                <span className="flex items-center gap-1">
-                  <svg
-                    xmlns="http://www.w3.org/2000/svg"
-                    width="16"
-                    height="16"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    strokeWidth="2"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                  >
-                    <path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/>
-                    <circle cx="12" cy="10" r="3"/>
-                  </svg>
-                  {item.location}
-                </span>
-                <span>•</span>
-                <Badge variant="outline">{item.category}</Badge>
+          <div>
+            <div className="flex items-center justify-between mb-2">
+              <h1 className="text-3xl font-bold">{item.title}</h1>
+              <Badge>{item.condition}</Badge>
+            </div>
+            
+            <div className="flex items-center text-gray-500 mb-6">
+              <span>{item.location}</span>
+              <span className="mx-2">•</span>
+              <span>Listed by {item.ownerName}</span>
+            </div>
+            
+            <div className="bg-gray-50 p-4 rounded-md mb-6">
+              <h2 className="font-semibold mb-2">Description</h2>
+              <p className="text-gray-700">{item.description}</p>
+            </div>
+            
+            <div className="mb-6">
+              <h2 className="font-semibold mb-2">Details</h2>
+              <div className="grid grid-cols-2 gap-y-2">
+                <span className="text-gray-500">Category:</span>
+                <span>{item.category}</span>
+                <span className="text-gray-500">Condition:</span>
+                <span>{item.condition}</span>
               </div>
             </div>
             
-            <div>
-              <h2 className="text-xl font-semibold mb-2">Description</h2>
-              <p className="text-gray-600">{item.description}</p>
-            </div>
-            
-            <Card>
-              <CardHeader className="pb-2">
-                <CardTitle className="text-base">Listed By</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="flex items-center gap-4">
-                  <Avatar>
-                    <AvatarFallback className="bg-swapspace-green-DEFAULT text-white">
-                      {item.ownerName.split(' ').map(n => n[0]).join('')}
-                    </AvatarFallback>
-                  </Avatar>
-                  <div>
-                    <p className="font-medium">{item.ownerName}</p>
-                    <p className="text-sm text-gray-500">Member since 2023</p>
-                  </div>
+            {isAuthenticated ? (
+              <div className="flex flex-col gap-4">
+                <Button className="w-full">
+                  Propose a Swap
+                </Button>
+                <Button variant="outline" className="w-full">
+                  Contact Owner
+                </Button>
+              </div>
+            ) : (
+              <div className="bg-amber-50 p-4 rounded-md text-center mb-6">
+                <p className="mb-4">You need to be logged in to propose a swap</p>
+                <div className="flex gap-4 justify-center">
+                  <Button asChild size="sm">
+                    <Link to="/login">Login</Link>
+                  </Button>
+                  <Button asChild variant="outline" size="sm">
+                    <Link to="/signup">Sign Up</Link>
+                  </Button>
                 </div>
-              </CardContent>
-              <CardFooter>
-                <Button className="w-full">Propose a Swap</Button>
-              </CardFooter>
-            </Card>
-            
-            <div className="flex flex-col gap-4">
-              <Button variant="outline" className="w-full">
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  width="16"
-                  height="16"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="2"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  className="mr-2"
-                >
-                  <path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/>
-                </svg>
-                Message User
-              </Button>
-              <Button variant="outline" className="w-full">
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  width="16"
-                  height="16"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="2"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  className="mr-2"
-                >
-                  <path d="m3 21 1.9-5.7a8.5 8.5 0 1 1 3.8 3.8z"/>
-                </svg>
-                Report Item
-              </Button>
-            </div>
+              </div>
+            )}
           </div>
-        </div>
-        
-        {/* Similar Items */}
-        <div className="mt-16">
-          <h2 className="text-2xl font-bold mb-6">Similar Items</h2>
-          <ItemGrid items={similarItems} />
         </div>
       </div>
     </Layout>
