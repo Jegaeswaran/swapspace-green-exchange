@@ -1,77 +1,122 @@
 
 const express = require('express');
 const cors = require('cors');
+const mongoose = require('mongoose');
+
 const app = express();
 const port = 4000;
 
-// Mock database
-let items = [
-  {
-    id: '1',
-    title: 'Vintage Record Player',
-    description: 'Fully functional vintage record player in excellent condition. Perfect for vinyl enthusiasts.',
-    category: 'Electronics',
-    condition: 'Good',
-    imageUrl: 'https://images.unsplash.com/photo-1618160702438-9b02ab6515c9',
-    location: 'Portland, OR',
-    ownerId: 'user1',
-    ownerName: 'Alex Johnson',
-    createdAt: new Date(),
-    updatedAt: new Date()
-  },
-  {
-    id: '2',
-    title: 'Mid-Century Modern Sofa',
-    description: 'Beautiful 3-seater sofa in teal blue. Minimal wear and very comfortable.',
-    category: 'Furniture',
-    condition: 'Like New',
-    imageUrl: 'https://images.unsplash.com/photo-1721322800607-8c38375eef04',
-    location: 'Seattle, WA',
-    ownerId: 'user2',
-    ownerName: 'Jamie Smith',
-    createdAt: new Date(),
-    updatedAt: new Date()
-  }
-  // Add more items if needed
-];
+// Replace with your MongoDB connection string
+const MONGODB_URI = process.env.MONGODB_URI || 'mongodb://localhost:27017/swapspace';
 
 app.use(cors());
 app.use(express.json());
 
+// --- Mongoose Models ---
+
+const userSchema = new mongoose.Schema({
+  name: String,
+  email: { type: String, unique: true },
+  password: String, // NOTE: Store hashed passwords in production!
+  location: String,
+  createdAt: { type: Date, default: Date.now },
+  updatedAt: { type: Date, default: Date.now }
+});
+
+const User = mongoose.model('User', userSchema);
+
+const itemSchema = new mongoose.Schema({
+  title: String,
+  description: String,
+  category: String,
+  condition: String,
+  imageUrl: String,
+  location: String,
+  ownerId: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
+  ownerName: String,
+  createdAt: { type: Date, default: Date.now },
+  updatedAt: { type: Date, default: Date.now }
+});
+
+const Item = mongoose.model('Item', itemSchema);
+
+// --- MongoDB Connection ---
+mongoose.connect(MONGODB_URI, { useNewUrlParser: true, useUnifiedTopology: true })
+  .then(() => console.log("MongoDB connected!"))
+  .catch(err => console.error("MongoDB connection error:", err));
+
+// --- API Routes ---
+
 // Get all items
-app.get('/api/items', (req, res) => {
-  res.json(items);
+app.get('/api/items', async (req, res) => {
+  try {
+    const items = await Item.find().populate('ownerId', 'name');
+    res.json(items);
+  } catch (err) {
+    res.status(500).json({ error: "Failed to fetch items." });
+  }
 });
 
 // Get item by ID
-app.get('/api/items/:id', (req, res) => {
-  const item = items.find(i => i.id === req.params.id);
-  if (!item) return res.status(404).json({ error: 'Item not found' });
-  res.json(item);
+app.get('/api/items/:id', async (req, res) => {
+  try {
+    const item = await Item.findById(req.params.id).populate('ownerId', 'name');
+    if (!item) return res.status(404).json({ error: 'Item not found' });
+    res.json(item);
+  } catch (err) {
+    res.status(500).json({ error: "Failed to fetch item." });
+  }
 });
 
 // Create new item
-app.post('/api/items', (req, res) => {
-  const { title, description, category, condition, imageUrl, location, ownerId, ownerName } = req.body;
-  const newItem = {
-    id: (Math.random() * 1e16).toString(36),
-    title,
-    description,
-    category,
-    condition,
-    imageUrl,
-    location,
-    ownerId,
-    ownerName,
-    createdAt: new Date(),
-    updatedAt: new Date()
-  };
-  items.push(newItem);
-  res.status(201).json(newItem);
+app.post('/api/items', async (req, res) => {
+  try {
+    const { title, description, category, condition, imageUrl, location, ownerId, ownerName } = req.body;
+    const newItem = new Item({
+      title,
+      description,
+      category,
+      condition,
+      imageUrl,
+      location,
+      ownerId,
+      ownerName
+    });
+    await newItem.save();
+    res.status(201).json(newItem);
+  } catch (err) {
+    res.status(400).json({ error: 'Failed to create item.', details: err.message });
+  }
+});
+
+// Get all users
+app.get('/api/users', async (req, res) => {
+  try {
+    const users = await User.find();
+    res.json(users);
+  } catch (err) {
+    res.status(500).json({ error: 'Failed to fetch users.' });
+  }
+});
+
+// Register new user
+app.post('/api/users', async (req, res) => {
+  try {
+    const { name, email, password, location } = req.body;
+    const existing = await User.findOne({ email });
+    if (existing) {
+      return res.status(409).json({ error: "User with this email already exists." });
+    }
+    const newUser = new User({ name, email, password, location });
+    await newUser.save();
+    res.status(201).json(newUser);
+  } catch (err) {
+    res.status(400).json({ error: 'Failed to create user.', details: err.message });
+  }
 });
 
 // Health check
-app.get('/', (req, res) => res.send('API running!'));
+app.get('/', (req, res) => res.send('API running and connected to MongoDB!'));
 
 app.listen(port, () => {
   console.log(`Backend server listening at http://localhost:${port}`);
