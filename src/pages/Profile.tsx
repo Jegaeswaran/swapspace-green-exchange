@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import Layout from '@/components/layout/Layout';
 import { Button } from '@/components/ui/button';
@@ -18,6 +17,7 @@ import { toast } from 'sonner';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import ItemGrid from '@/components/items/ItemGrid';
 import { ItemProps } from '@/components/items/ItemCard';
+import AddItemModal from "@/components/items/AddItemModal";
 
 const Profile: React.FC = () => {
   const [user, setUser] = useState({
@@ -73,6 +73,24 @@ const Profile: React.FC = () => {
       ownerName: 'Morgan Lee'
     }
   ];
+
+  // Modal open state and handler for refreshing after add
+  const [showAddModal, setShowAddModal] = useState(false);
+  const [listings, setListings] = useState<ItemProps[]>(userItems);
+
+  // We'll load actual items from API after adding
+  const fetchUserItems = async () => {
+    // For a real app, fetch user's actual listings from backend
+    try {
+      const res = await fetch("http://localhost:4000/api/items");
+      const allItems = await res.json();
+      // Only show items listed by this user (matching user id/name)
+      const filtered = allItems.filter((item: ItemProps) => item.ownerId === user.id);
+      setListings(filtered);
+    } catch (e) {
+      // silent fail, keep mock if API fails
+    }
+  };
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
@@ -214,15 +232,23 @@ const Profile: React.FC = () => {
               <TabsContent value="listings">
                 <div className="mb-4 flex justify-between items-center">
                   <h2 className="text-xl font-semibold">My Listed Items</h2>
-                  <Button>+ Add New Item</Button>
+                  <Button onClick={() => setShowAddModal(true)}>+ Add New Item</Button>
                 </div>
-                {userItems.length > 0 ? (
-                  <ItemGrid items={userItems} />
+                <AddItemModal
+                  open={showAddModal}
+                  onClose={() => setShowAddModal(false)}
+                  onItemCreated={fetchUserItems}
+                  ownerId={user.id}
+                  ownerName={`${user.firstName} ${user.lastName}`}
+                  location={user.location}
+                />
+                {listings.length > 0 ? (
+                  <ItemGrid items={listings} />
                 ) : (
                   <Card>
                     <CardContent className="text-center py-12">
                       <p className="mb-4">You haven't listed any items yet.</p>
-                      <Button>List Your First Item</Button>
+                      <Button onClick={() => setShowAddModal(true)}>List Your First Item</Button>
                     </CardContent>
                   </Card>
                 )}
