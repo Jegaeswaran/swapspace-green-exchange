@@ -1,33 +1,30 @@
 
 import React, { useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
+import { useAuth } from "@/hooks/useAuth";
 
 const LoginForm: React.FC = () => {
+  const navigate = useNavigate();
+  const { login, loading, error } = useAuth();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [isLoading, setIsLoading] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setIsLoading(true);
     
-    // This is where you'd connect to your authentication service
-    // For now, we'll simulate a login success
     try {
-      // Simulate API call
-      await new Promise((resolve) => setTimeout(resolve, 800));
+      const success = await login(email, password);
       
-      // Mock authentication success
-      toast.success("Login successful!");
-      // Redirect would happen here in a real app
+      if (success) {
+        toast.success("Login successful!");
+        navigate('/');
+      }
     } catch (error) {
-      toast.error("Login failed. Please check your credentials.");
-    } finally {
-      setIsLoading(false);
+      console.error("Login error:", error);
     }
   };
 
@@ -68,9 +65,13 @@ const LoginForm: React.FC = () => {
           />
         </div>
         
-        <Button type="submit" className="w-full" disabled={isLoading}>
-          {isLoading ? "Logging in..." : "Login"}
+        <Button type="submit" className="w-full" disabled={loading}>
+          {loading ? "Logging in..." : "Login"}
         </Button>
+        
+        {error && (
+          <p className="text-red-500 text-sm text-center">{error}</p>
+        )}
       </div>
       
       <div className="mt-6 text-center text-sm">

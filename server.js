@@ -65,6 +65,40 @@ const validateImageUrl = (url) => {
 
 // --- API Routes ---
 
+// Login endpoint
+app.post('/api/login', async (req, res) => {
+  try {
+    const { email, password } = req.body;
+    
+    // Find user by email
+    const user = await User.findOne({ email });
+    
+    // Check if user exists and password matches
+    if (!user || user.password !== password) { // In production, use bcrypt.compare
+      return res.status(401).json({ error: 'Invalid email or password' });
+    }
+    
+    // Generate a simple token (In production, use JWT)
+    const token = `auth-token-${Math.random().toString(36).substring(2, 15)}`;
+    
+    // Return user info (excluding password) and token
+    res.json({
+      user: {
+        id: user._id,
+        name: user.name,
+        email: user.email,
+        location: user.location,
+        createdAt: user.createdAt,
+        updatedAt: user.updatedAt
+      },
+      token
+    });
+  } catch (err) {
+    console.error('Login error:', err);
+    res.status(500).json({ error: 'Server error', details: err.message });
+  }
+});
+
 // Get all items
 app.get('/api/items', async (req, res) => {
   try {
@@ -125,8 +159,26 @@ app.post('/api/items', async (req, res) => {
 // Get all users
 app.get('/api/users', async (req, res) => {
   try {
-    const users = await User.find();
-    res.json(users);
+    let query = {};
+    
+    // Filter by email if provided
+    if (req.query.email) {
+      query.email = req.query.email;
+    }
+    
+    const users = await User.find(query);
+    
+    // Don't return passwords
+    const safeUsers = users.map(user => ({
+      id: user._id,
+      name: user.name,
+      email: user.email,
+      location: user.location,
+      createdAt: user.createdAt,
+      updatedAt: user.updatedAt
+    }));
+    
+    res.json(safeUsers);
   } catch (err) {
     res.status(500).json({ error: 'Failed to fetch users.' });
   }
@@ -140,9 +192,28 @@ app.post('/api/users', async (req, res) => {
     if (existing) {
       return res.status(409).json({ error: "User with this email already exists." });
     }
-    const newUser = new User({ name, email, password, location });
+    
+    // Create new user
+    const newUser = new User({ 
+      name, 
+      email, 
+      password, // In production, hash this password with bcrypt
+      location: location || ''
+    });
+    
     await newUser.save();
-    res.status(201).json(newUser);
+    
+    // Return user without password
+    const safeUser = {
+      id: newUser._id,
+      name: newUser.name,
+      email: newUser.email,
+      location: newUser.location,
+      createdAt: newUser.createdAt,
+      updatedAt: newUser.updatedAt
+    };
+    
+    res.status(201).json(safeUser);
   } catch (err) {
     res.status(400).json({ error: 'Failed to create user.', details: err.message });
   }

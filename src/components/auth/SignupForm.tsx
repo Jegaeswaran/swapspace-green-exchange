@@ -1,23 +1,26 @@
 
 import React, { useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
 import { toast } from "sonner";
+import { useAuth } from "@/hooks/useAuth";
 
 const SignupForm: React.FC = () => {
+  const navigate = useNavigate();
+  const { register, loading, error } = useAuth();
   const [formData, setFormData] = useState({
     firstName: '',
     lastName: '',
     email: '',
     password: '',
     confirmPassword: '',
-    agreeTerms: false
+    agreeTerms: false,
+    location: ''
   });
-  const [isLoading, setIsLoading] = useState(false);
-
+  
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value, type, checked } = e.target;
     setFormData(prev => ({
@@ -39,20 +42,22 @@ const SignupForm: React.FC = () => {
       return;
     }
     
-    setIsLoading(true);
+    const fullName = `${formData.firstName} ${formData.lastName}`;
     
-    // This is where you'd connect to your authentication service
     try {
-      // Simulate API call
-      await new Promise((resolve) => setTimeout(resolve, 800));
+      const success = await register(
+        fullName,
+        formData.email,
+        formData.password,
+        formData.location || 'No location provided'
+      );
       
-      // Mock registration success
-      toast.success("Account created successfully!");
-      // Redirect would happen here in a real app
+      if (success) {
+        toast.success("Account created successfully!");
+        navigate('/');
+      }
     } catch (error) {
-      toast.error("Registration failed. Please try again.");
-    } finally {
-      setIsLoading(false);
+      console.error("Registration error:", error);
     }
   };
 
@@ -102,6 +107,18 @@ const SignupForm: React.FC = () => {
             value={formData.email}
             onChange={handleChange}
             required
+          />
+        </div>
+
+        <div>
+          <Label htmlFor="location">Location</Label>
+          <Input
+            id="location"
+            name="location"
+            type="text"
+            placeholder="City, State"
+            value={formData.location}
+            onChange={handleChange}
           />
         </div>
         
@@ -155,9 +172,13 @@ const SignupForm: React.FC = () => {
           </label>
         </div>
         
-        <Button type="submit" className="w-full" disabled={isLoading}>
-          {isLoading ? "Creating Account..." : "Sign Up"}
+        <Button type="submit" className="w-full" disabled={loading}>
+          {loading ? "Creating Account..." : "Sign Up"}
         </Button>
+        
+        {error && (
+          <p className="text-red-500 text-sm text-center">{error}</p>
+        )}
       </div>
       
       <div className="mt-6 text-center text-sm">

@@ -51,6 +51,7 @@ export const useAuth = () => {
       
       if (!result) {
         setError('Invalid email or password');
+        setLoading(false);
         return false;
       }
       
@@ -66,13 +67,13 @@ export const useAuth = () => {
         isAuthenticated: true
       });
       
+      setLoading(false);
       return true;
     } catch (err) {
       console.error('Login error:', err);
       setError('Something went wrong. Please try again.');
-      return false;
-    } finally {
       setLoading(false);
+      return false;
     }
   };
   
@@ -90,6 +91,7 @@ export const useAuth = () => {
       
       if (!result) {
         setError('User with this email already exists');
+        setLoading(false);
         return false;
       }
       
@@ -105,13 +107,13 @@ export const useAuth = () => {
         isAuthenticated: true
       });
       
+      setLoading(false);
       return true;
     } catch (err) {
       console.error('Registration error:', err);
       setError('Something went wrong. Please try again.');
-      return false;
-    } finally {
       setLoading(false);
+      return false;
     }
   };
   
