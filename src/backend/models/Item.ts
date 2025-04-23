@@ -32,6 +32,24 @@ const ItemSchema = new mongoose.Schema({
 export const Item = mongoose.model('Item', ItemSchema);
 */
 
+// Helper function to validate image URLs
+const validateImageUrl = (url: string): string => {
+  if (!url) return '';
+  
+  // If it's already a full URL
+  if (url.startsWith('http://') || url.startsWith('https://')) {
+    return url;
+  }
+  
+  // For Unsplash placeholder format
+  if (url.startsWith('photo-')) {
+    return `https://images.unsplash.com/${url}`;
+  }
+  
+  // Return as-is if none of the conditions match
+  return url;
+};
+
 // For demonstration in Lovable:
 export class ItemModel {
   static async findAll(): Promise<IItem[]> {
@@ -44,7 +62,7 @@ export class ItemModel {
         description: 'Fully functional vintage record player in excellent condition. Perfect for vinyl enthusiasts.',
         category: 'Electronics',
         condition: 'Good',
-        imageUrl: 'https://images.unsplash.com/photo-1618160702438-9b02ab6515c9',
+        imageUrl: validateImageUrl('photo-1618160702438-9b02ab6515c9'),
         location: 'Portland, OR',
         ownerId: 'user1',
         ownerName: 'Alex Johnson',
@@ -57,13 +75,39 @@ export class ItemModel {
         description: 'Beautiful 3-seater sofa in teal blue. Minimal wear and very comfortable.',
         category: 'Furniture',
         condition: 'Like New',
-        imageUrl: 'https://images.unsplash.com/photo-1721322800607-8c38375eef04',
+        imageUrl: validateImageUrl('photo-1581091226825-a6a2a5aee158'),
         location: 'Seattle, WA',
         ownerId: 'user2',
         ownerName: 'Jamie Smith',
         createdAt: new Date(),
         updatedAt: new Date()
       },
+      {
+        id: '3',
+        title: 'Professional Camera Kit',
+        description: 'DSLR camera with multiple lenses and accessories. Perfect for photography enthusiasts.',
+        category: 'Electronics',
+        condition: 'Excellent',
+        imageUrl: validateImageUrl('photo-1488590528505-98d2b5aba04b'),
+        location: 'New York, NY',
+        ownerId: 'user3',
+        ownerName: 'Chris Wilson',
+        createdAt: new Date(),
+        updatedAt: new Date()
+      },
+      {
+        id: '4',
+        title: 'Mountain Bike',
+        description: 'High-quality mountain bike, barely used. Great for trails and outdoor adventures.',
+        category: 'Sports',
+        condition: 'Like New',
+        imageUrl: validateImageUrl('photo-1649972904349-6e44c42644a7'),
+        location: 'Denver, CO',
+        ownerId: 'user4',
+        ownerName: 'Taylor Brown',
+        createdAt: new Date(),
+        updatedAt: new Date()
+      }
       // More items would be here from actual database
     ];
   }
@@ -76,13 +120,17 @@ export class ItemModel {
 
   static async create(itemData: Partial<IItem>): Promise<IItem> {
     console.log('Simulating MongoDB query: Create new item', itemData);
+    
+    // Validate the image URL if provided
+    const imageUrl = itemData.imageUrl ? validateImageUrl(itemData.imageUrl) : '';
+    
     return {
       id: Math.random().toString(36).substr(2, 9),
       title: itemData.title || '',
       description: itemData.description || '',
       category: itemData.category || '',
       condition: itemData.condition || '',
-      imageUrl: itemData.imageUrl || '',
+      imageUrl: imageUrl,
       location: itemData.location || '',
       ownerId: itemData.ownerId || '',
       ownerName: itemData.ownerName || '',

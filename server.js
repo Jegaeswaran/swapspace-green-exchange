@@ -45,13 +45,39 @@ mongoose.connect(MONGODB_URI, { useNewUrlParser: true, useUnifiedTopology: true 
   .then(() => console.log("MongoDB connected!"))
   .catch(err => console.error("MongoDB connection error:", err));
 
+// --- Helper Functions ---
+const validateImageUrl = (url) => {
+  if (!url) return null;
+  
+  // If it's already a full URL (starts with http:// or https://)
+  if (url.startsWith('http://') || url.startsWith('https://')) {
+    return url;
+  }
+  
+  // For Unsplash placeholder format
+  if (url.startsWith('photo-')) {
+    return `https://images.unsplash.com/${url}`;
+  }
+  
+  // Return as-is if none of the conditions match
+  return url;
+};
+
 // --- API Routes ---
 
 // Get all items
 app.get('/api/items', async (req, res) => {
   try {
     const items = await Item.find().populate('ownerId', 'name');
-    res.json(items);
+    
+    // Format the items to ensure proper image URLs
+    const formattedItems = items.map(item => {
+      const formattedItem = item.toObject();
+      formattedItem.imageUrl = validateImageUrl(formattedItem.imageUrl);
+      return formattedItem;
+    });
+    
+    res.json(formattedItems);
   } catch (err) {
     res.status(500).json({ error: "Failed to fetch items." });
   }
@@ -62,7 +88,11 @@ app.get('/api/items/:id', async (req, res) => {
   try {
     const item = await Item.findById(req.params.id).populate('ownerId', 'name');
     if (!item) return res.status(404).json({ error: 'Item not found' });
-    res.json(item);
+    
+    const formattedItem = item.toObject();
+    formattedItem.imageUrl = validateImageUrl(formattedItem.imageUrl);
+    
+    res.json(formattedItem);
   } catch (err) {
     res.status(500).json({ error: "Failed to fetch item." });
   }
@@ -72,12 +102,15 @@ app.get('/api/items/:id', async (req, res) => {
 app.post('/api/items', async (req, res) => {
   try {
     const { title, description, category, condition, imageUrl, location, ownerId, ownerName } = req.body;
+    
+    const validatedImageUrl = validateImageUrl(imageUrl);
+    
     const newItem = new Item({
       title,
       description,
       category,
       condition,
-      imageUrl,
+      imageUrl: validatedImageUrl,
       location,
       ownerId,
       ownerName
