@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Link } from 'react-router-dom';
 import Layout from '@/components/layout/Layout';
@@ -15,7 +14,7 @@ const Index: React.FC = () => {
       description: 'Fully functional vintage record player in excellent condition. Perfect for vinyl enthusiasts.',
       category: 'Electronics',
       condition: 'Good',
-      imageUrl: 'https://images.unsplash.com/photo-1618160702438-9b02ab6515c9',
+      imageUrl: 'https://images.unsplash.com/photo-1545454675-3531b543be5d',
       location: 'Portland, OR',
       ownerId: 'user1',
       ownerName: 'Alex Johnson'
@@ -26,7 +25,7 @@ const Index: React.FC = () => {
       description: 'Beautiful 3-seater sofa in teal blue. Minimal wear and very comfortable.',
       category: 'Furniture',
       condition: 'Like New',
-      imageUrl: 'https://images.unsplash.com/photo-1721322800607-8c38375eef04',
+      imageUrl: 'https://images.unsplash.com/photo-1581091226825-a6a2a5aee158',
       location: 'Seattle, WA',
       ownerId: 'user2',
       ownerName: 'Jamie Smith'
@@ -48,7 +47,7 @@ const Index: React.FC = () => {
       description: 'Trek mountain bike, 21 speeds. Some scratches but mechanically sound.',
       category: 'Sports',
       condition: 'Fair',
-      imageUrl: 'https://images.unsplash.com/photo-1466721591366-2d5fba72006d',
+      imageUrl: 'https://images.unsplash.com/photo-1571068316344-75bc76f77890',
       location: 'Austin, TX',
       ownerId: 'user4',
       ownerName: 'Jordan Wilson'
