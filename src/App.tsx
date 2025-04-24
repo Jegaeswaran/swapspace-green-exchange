@@ -13,6 +13,7 @@ import Admin from "./pages/Admin";
 import ItemDetails from "./pages/ItemDetails";
 import HowItWorks from "./pages/HowItWorks";
 import NotFound from "./pages/NotFound";
+import AddItem from "./pages/AddItem";
 
 const queryClient = new QueryClient();
 
