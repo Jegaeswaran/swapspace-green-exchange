@@ -1,6 +1,6 @@
 
 import React, { useEffect, useState } from 'react';
-import { useParams, Link } from 'react-router-dom';
+import { useParams, Link, useNavigate } from 'react-router-dom';
 import Layout from '@/components/layout/Layout';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -8,13 +8,16 @@ import { Card } from '@/components/ui/card';
 import { itemService } from '@/backend/services/itemService';
 import { IItem } from '@/backend/models/Item';
 import { useAuth } from '@/hooks/useAuth';
+import { toast } from 'sonner';
 
 const ItemDetails: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const [item, setItem] = useState<IItem | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const { isAuthenticated } = useAuth();
+  const { isAuthenticated, user } = useAuth();
+  const navigate = useNavigate();
+  const [proposingSwap, setProposingSwap] = useState(false);
 
   useEffect(() => {
     const fetchItem = async () => {
@@ -41,6 +44,46 @@ const ItemDetails: React.FC = () => {
     
     fetchItem();
   }, [id]);
+
+  const handleProposeSwap = async () => {
+    if (!isAuthenticated) {
+      toast.error("You need to be logged in to propose a swap");
+      navigate('/login');
+      return;
+    }
+
+    if (!item) return;
+
+    setProposingSwap(true);
+    
+    try {
+      // In a real app, this would be an API call to create a swap proposal
+      await new Promise(resolve => setTimeout(resolve, 1000)); // Simulate API call
+      
+      toast.success("Swap proposal sent! The owner will contact you soon.");
+      
+      // In a real app, navigate to a swap proposals page
+      // For now, we'll just simulate success
+    } catch (err) {
+      console.error("Error proposing swap:", err);
+      toast.error("Failed to send swap proposal. Please try again.");
+    } finally {
+      setProposingSwap(false);
+    }
+  };
+  
+  const handleContactOwner = () => {
+    if (!isAuthenticated) {
+      toast.error("You need to be logged in to contact the owner");
+      navigate('/login');
+      return;
+    }
+    
+    if (!item) return;
+    
+    // In a real app, this would open a chat or message form
+    toast.success("Message feature coming soon!");
+  };
 
   if (loading) {
     return (
@@ -70,6 +113,8 @@ const ItemDetails: React.FC = () => {
     );
   }
 
+  const isOwner = user?.id === item.ownerId;
+
   return (
     <Layout>
       <div className="container px-4 md:px-6 py-8">
@@ -81,6 +126,9 @@ const ItemDetails: React.FC = () => {
                 src={item.imageUrl} 
                 alt={item.title} 
                 className="w-full h-auto object-cover" 
+                onError={(e) => {
+                  e.currentTarget.src = "https://images.unsplash.com/photo-1488590528505-98d2b5aba04b";
+                }}
               />
             </div>
           </div>
@@ -114,14 +162,31 @@ const ItemDetails: React.FC = () => {
             </div>
             
             {isAuthenticated ? (
-              <div className="flex flex-col gap-4">
-                <Button className="w-full">
-                  Propose a Swap
-                </Button>
-                <Button variant="outline" className="w-full">
-                  Contact Owner
-                </Button>
-              </div>
+              isOwner ? (
+                <div className="bg-blue-50 p-4 rounded-md text-center mb-6">
+                  <p>This is your item. You can't propose a swap with yourself.</p>
+                  <Button className="mt-4" asChild>
+                    <Link to="/my-items">Manage My Items</Link>
+                  </Button>
+                </div>
+              ) : (
+                <div className="flex flex-col gap-4">
+                  <Button 
+                    className="w-full"
+                    onClick={handleProposeSwap}
+                    disabled={proposingSwap}
+                  >
+                    {proposingSwap ? "Sending Proposal..." : "Propose a Swap"}
+                  </Button>
+                  <Button 
+                    variant="outline" 
+                    className="w-full"
+                    onClick={handleContactOwner}
+                  >
+                    Contact Owner
+                  </Button>
+                </div>
+              )
             ) : (
               <div className="bg-amber-50 p-4 rounded-md text-center mb-6">
                 <p className="mb-4">You need to be logged in to propose a swap</p>

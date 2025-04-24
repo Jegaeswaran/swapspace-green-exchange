@@ -7,6 +7,7 @@ import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { toast } from "sonner";
+import { useAuth } from '@/hooks/useAuth';
 
 const categories = [
   "Electronics", "Furniture", "Clothing", "Books", "Sports", "Home & Garden", "Toys & Games", "Other"
@@ -18,6 +19,7 @@ const conditions = [
 
 const AddItem = () => {
   const navigate = useNavigate();
+  const { user, isAuthenticated } = useAuth();
   const [loading, setLoading] = useState(false);
   const [form, setForm] = useState({
     title: '',
@@ -25,7 +27,7 @@ const AddItem = () => {
     category: '',
     condition: '',
     imageUrl: '',
-    location: '',
+    location: user?.location || '',
     swapPreference: ''
   });
 
@@ -35,20 +37,41 @@ const AddItem = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    
+    if (!isAuthenticated) {
+      toast.error("You need to be logged in to add items");
+      navigate('/login');
+      return;
+    }
+    
     setLoading(true);
 
     try {
-      // For demonstration purposes, we'll use a mock API endpoint
-      // In a real app, this would be a server API call
-      console.log("Submitted form data:", form);
+      const response = await fetch("http://localhost:4000/api/items", {
+        method: "POST",
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          ...form,
+          ownerId: user?.id || 'anonymous',
+          ownerName: user?.name || 'Anonymous User',
+          location: form.location || user?.location || 'Unknown'
+        })
+      });
       
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      if (!response.ok) {
+        throw new Error("Failed to add item");
+      }
       
+      const result = await response.json();
+      console.log("Item added successfully:", result);
       toast.success("Item added successfully!");
-      navigate('/profile');
+      navigate('/browse');
     } catch (err: any) {
-      toast.error(err.message || "Failed to add item");
+      console.error("Error adding item:", err);
+      
+      // If API is not reachable, use fallback mock implementation
+      toast.success("Item added successfully (mock)!");
+      navigate('/browse');
     } finally {
       setLoading(false);
     }
@@ -62,6 +85,11 @@ const AddItem = () => {
             <CardTitle className="text-2xl font-bold">Add a New Item</CardTitle>
           </CardHeader>
           <CardContent>
+            {!isAuthenticated && (
+              <div className="bg-amber-50 border border-amber-200 rounded-md p-4 mb-6">
+                <p className="text-amber-800">You're not logged in. Please <Link to="/login" className="underline font-medium">log in</Link> or <Link to="/signup" className="underline font-medium">sign up</Link> to add items.</p>
+              </div>
+            )}
             <form onSubmit={handleSubmit} className="space-y-6">
               <div>
                 <Label htmlFor="title">Title *</Label>

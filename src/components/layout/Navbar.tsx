@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React from 'react';
 import { Link } from 'react-router-dom';
 import { Button } from "@/components/ui/button";
 import { 
@@ -9,18 +9,13 @@ import {
   DropdownMenuTrigger
 } from "@/components/ui/dropdown-menu";
 import { Menu, User, PlusCircle } from 'lucide-react';
+import { useAuth } from "@/hooks/useAuth";
 
 const Navbar = () => {
-  const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const { isAuthenticated, user, logout } = useAuth();
   
   const handleLogout = () => {
-    setIsLoggedIn(false);
-    // Add actual logout logic here
-  };
-
-  // Added temporary login function for demo purposes
-  const handleLogin = () => {
-    setIsLoggedIn(true);
+    logout();
   };
 
   return (
@@ -65,7 +60,7 @@ const Navbar = () => {
         </nav>
 
         <div className="flex items-center gap-4">
-          {isLoggedIn ? (
+          {isAuthenticated ? (
             <>
               <Button asChild variant="outline" className="gap-2">
                 <Link to="/add-item"><PlusCircle className="h-4 w-4" /> Add Item</Link>
@@ -91,7 +86,7 @@ const Navbar = () => {
             </>
           ) : (
             <>
-              <Button asChild variant="ghost" className="hidden md:inline-flex" onClick={handleLogin}>
+              <Button asChild variant="ghost" className="hidden md:inline-flex">
                 <Link to="/login">Login</Link>
               </Button>
               <Button asChild className="hidden md:inline-flex">
@@ -122,7 +117,7 @@ const Navbar = () => {
               <DropdownMenuItem asChild>
                 <Link to="/add-item">Add Item</Link>
               </DropdownMenuItem>
-              {isLoggedIn ? (
+              {isAuthenticated ? (
                 <>
                   <DropdownMenuItem asChild>
                     <Link to="/profile">My Profile</Link>
