@@ -12,6 +12,10 @@ interface AddItemModalProps {
   open: boolean;
   onClose: () => void;
   onItemCreated: () => void;
+  // Add optional props for Profile.tsx usage
+  ownerId?: string;
+  ownerName?: string;
+  location?: string;
 }
 
 const initialForm = {
@@ -30,7 +34,14 @@ const conditions = [
   "New", "Like New", "Good", "Fair", "Poor"
 ];
 
-const AddItemModal: React.FC<AddItemModalProps> = ({ open, onClose, onItemCreated }) => {
+const AddItemModal: React.FC<AddItemModalProps> = ({ 
+  open, 
+  onClose, 
+  onItemCreated,
+  ownerId,
+  ownerName,
+  location
+}) => {
   const [form, setForm] = useState(initialForm);
   const [loading, setLoading] = useState(false);
   const { user, isAuthenticated } = useAuth();
@@ -58,9 +69,9 @@ const AddItemModal: React.FC<AddItemModalProps> = ({ open, onClose, onItemCreate
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           ...form,
-          ownerId: user?.id || 'anonymous',
-          ownerName: user?.name || 'Anonymous User',
-          location: user?.location || 'Unknown Location',
+          ownerId: ownerId || user?.id || 'anonymous',
+          ownerName: ownerName || user?.name || 'Anonymous User',
+          location: location || user?.location || 'Unknown Location',
         })
       });
       
