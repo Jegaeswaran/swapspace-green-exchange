@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Button } from "@/components/ui/button";
@@ -13,7 +12,6 @@ import { Menu, User } from 'lucide-react';
 const Navbar = () => {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   
-  // This is a placeholder. In a real app, we would check authentication status
   const handleLogout = () => {
     setIsLoggedIn(false);
     // Add actual logout logic here
@@ -60,8 +58,8 @@ const Navbar = () => {
         <div className="flex items-center gap-4">
           {isLoggedIn ? (
             <>
-              <Button asChild variant="outline" className="hidden md:flex">
-                <Link to="/add-item">List an Item</Link>
+              <Button asChild variant="outline">
+                <Link to="/add-item">Add Item</Link>
               </Button>
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
