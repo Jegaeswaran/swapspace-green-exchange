@@ -5,33 +5,26 @@ import ItemGrid from '@/components/items/ItemGrid';
 import ItemSearch from '@/components/items/ItemSearch';
 import { useItems } from '@/hooks/useItems';
 import { ItemProps } from '@/components/items/ItemCard';
+import { toast } from 'sonner';
 
 const Browse: React.FC = () => {
-  const { items, loading, error } = useItems();
+  const { items, loading, error, searchItems } = useItems();
   const [filteredItems, setFilteredItems] = useState<ItemProps[]>([]);
   const [isFiltered, setIsFiltered] = useState(false);
 
-  const handleSearch = (query: string, category: string, condition: string) => {
-    const searchQuery = query.toLowerCase();
-    const categoryFilter = category.toLowerCase().replace('all-categories', '');
-    const conditionFilter = condition.toLowerCase().replace('all-conditions', '');
-    
-    const filtered = items.filter(item => {
-      const matchesQuery = !searchQuery || 
-        item.title.toLowerCase().includes(searchQuery) ||
-        item.description.toLowerCase().includes(searchQuery);
-        
-      const matchesCategory = !categoryFilter || 
-        item.category.toLowerCase().includes(categoryFilter);
-        
-      const matchesCondition = !conditionFilter || 
-        item.condition.toLowerCase().includes(conditionFilter);
-        
-      return matchesQuery && matchesCategory && matchesCondition;
-    });
-    
-    setFilteredItems(filtered);
-    setIsFiltered(true);
+  const handleSearch = async (query: string, category: string, condition: string) => {
+    try {
+      const results = await searchItems(query, category, condition);
+      setFilteredItems(results);
+      setIsFiltered(true);
+      
+      if (results.length === 0) {
+        toast.info("No items match your search criteria");
+      }
+    } catch (err) {
+      console.error("Search error:", err);
+      toast.error("Failed to search items");
+    }
   };
 
   return (

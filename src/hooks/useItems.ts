@@ -22,9 +22,25 @@ export const useItems = () => {
     }
   };
 
+  const searchItems = async (query: string, category: string, condition: string) => {
+    setLoading(true);
+    try {
+      const searchResults = await itemService.searchItems(query, category, condition);
+      setItems(searchResults);
+      setError(null);
+      return searchResults;
+    } catch (err) {
+      console.error('Error searching items:', err);
+      setError('Failed to search items. Please try again later.');
+      return [];
+    } finally {
+      setLoading(false);
+    }
+  };
+
   useEffect(() => {
     fetchItems();
   }, []);
 
-  return { items, loading, error, refetch: fetchItems };
+  return { items, loading, error, refetch: fetchItems, searchItems };
 };

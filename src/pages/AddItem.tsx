@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { toast } from "sonner";
 import { useAuth } from '@/hooks/useAuth';
+import { itemService } from '@/backend/services/itemService';
 
 const categories = [
   "Electronics", "Furniture", "Clothing", "Books", "Sports", "Home & Garden", "Toys & Games", "Other"
@@ -46,31 +47,51 @@ const AddItem = () => {
     setLoading(true);
 
     try {
-      const response = await fetch("http://localhost:4000/api/items", {
-        method: "POST",
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          ...form,
+      // First, try the external API
+      let success = false;
+      try {
+        const response = await fetch("http://localhost:4000/api/items", {
+          method: "POST",
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            ...form,
+            ownerId: user?.id || 'anonymous',
+            ownerName: user?.name || 'Anonymous User',
+            location: form.location || user?.location || 'Unknown'
+          })
+        });
+        
+        if (response.ok) {
+          success = true;
+          console.log("Item added successfully via API");
+        } else {
+          console.error("API error response:", await response.json());
+        }
+      } catch (apiErr) {
+        console.error("API call failed:", apiErr);
+      }
+      
+      // If API fails, use our local implementation
+      if (!success) {
+        // Use our local implementation
+        await itemService.createItem({
+          title: form.title,
+          description: form.description,
+          category: form.category,
+          condition: form.condition,
+          imageUrl: form.imageUrl,
           ownerId: user?.id || 'anonymous',
           ownerName: user?.name || 'Anonymous User',
           location: form.location || user?.location || 'Unknown'
-        })
-      });
-      
-      if (!response.ok) {
-        throw new Error("Failed to add item");
+        });
+        console.log("Item added successfully via local implementation");
       }
       
-      const result = await response.json();
-      console.log("Item added successfully:", result);
       toast.success("Item added successfully!");
       navigate('/browse');
     } catch (err: any) {
       console.error("Error adding item:", err);
-      
-      // If API is not reachable, use fallback mock implementation
-      toast.success("Item added successfully (mock)!");
-      navigate('/browse');
+      toast.error("Failed to add item. Please try again.");
     } finally {
       setLoading(false);
     }

@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
 import { useAuth } from '@/hooks/useAuth';
+import { itemService } from '@/backend/services/itemService';
 
 interface AddItemModalProps {
   open: boolean;
@@ -64,30 +65,47 @@ const AddItemModal: React.FC<AddItemModalProps> = ({
     setLoading(true);
 
     try {
-      const response = await fetch("http://localhost:4000/api/items", {
-        method: "POST",
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
+      // First try the API call
+      let success = false;
+      try {
+        const response = await fetch("http://localhost:4000/api/items", {
+          method: "POST",
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            ...form,
+            ownerId: ownerId || user?.id || 'anonymous',
+            ownerName: ownerName || user?.name || 'Anonymous User',
+            location: location || user?.location || 'Unknown Location',
+          })
+        });
+        
+        if (response.ok) {
+          success = true;
+        } else {
+          console.error("API error:", await response.json());
+        }
+      } catch (apiErr) {
+        console.error("API unavailable:", apiErr);
+      }
+      
+      // If API fails, use our local implementation
+      if (!success) {
+        // Use our local implementation instead
+        await itemService.createItem({
           ...form,
           ownerId: ownerId || user?.id || 'anonymous',
           ownerName: ownerName || user?.name || 'Anonymous User',
           location: location || user?.location || 'Unknown Location',
-        })
-      });
-      
-      if (!response.ok) throw new Error("Failed to add item.");
+        });
+      }
       
       setForm(initialForm);
-      toast.success("Item added!");
+      toast.success("Item added successfully!");
       onClose();
       onItemCreated();
     } catch (err: any) {
       console.error("Error adding item:", err);
-      
-      // If the API fails, use a fallback for demo purposes
-      toast.success("Item added! (Demo Mode)");
-      onClose();
-      onItemCreated();
+      toast.error("Failed to add item. Please try again.");
     } finally {
       setLoading(false);
     }

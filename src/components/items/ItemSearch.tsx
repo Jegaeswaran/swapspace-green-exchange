@@ -17,8 +17,8 @@ interface ItemSearchProps {
 
 const ItemSearch: React.FC<ItemSearchProps> = ({ onSearch }) => {
   const [searchQuery, setSearchQuery] = useState('');
-  const [category, setCategory] = useState('');
-  const [condition, setCondition] = useState('');
+  const [category, setCategory] = useState('all-categories');
+  const [condition, setCondition] = useState('all-conditions');
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
@@ -45,6 +45,13 @@ const ItemSearch: React.FC<ItemSearchProps> = ({ onSearch }) => {
     "Fair",
     "Poor"
   ];
+
+  const resetSearch = () => {
+    setSearchQuery('');
+    setCategory('all-categories');
+    setCondition('all-conditions');
+    onSearch('', 'all-categories', 'all-conditions');
+  };
 
   return (
     <form onSubmit={handleSearch} className="bg-white p-4 rounded-lg shadow-sm">
@@ -90,9 +97,14 @@ const ItemSearch: React.FC<ItemSearchProps> = ({ onSearch }) => {
           </Select>
         </div>
         
-        <Button type="submit" className="whitespace-nowrap">
-          Search Items
-        </Button>
+        <div className="flex gap-2">
+          <Button type="submit" className="whitespace-nowrap">
+            Search Items
+          </Button>
+          <Button type="button" variant="outline" onClick={resetSearch}>
+            Reset
+          </Button>
+        </div>
       </div>
     </form>
   );

@@ -13,5 +13,9 @@ export const itemService = {
   
   createItem: async (itemData: Partial<IItem>): Promise<IItem> => {
     return await ItemModel.create(itemData);
+  },
+
+  searchItems: async (query: string, category: string, condition: string): Promise<IItem[]> => {
+    return await ItemModel.search(query, category, condition);
   }
 };
