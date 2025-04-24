@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Button } from "@/components/ui/button";
@@ -7,7 +8,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger
 } from "@/components/ui/dropdown-menu";
-import { Menu, User } from 'lucide-react';
+import { Menu, User, PlusCircle } from 'lucide-react';
 
 const Navbar = () => {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
@@ -15,6 +16,11 @@ const Navbar = () => {
   const handleLogout = () => {
     setIsLoggedIn(false);
     // Add actual logout logic here
+  };
+
+  // Added temporary login function for demo purposes
+  const handleLogin = () => {
+    setIsLoggedIn(true);
   };
 
   return (
@@ -53,13 +59,16 @@ const Navbar = () => {
           <Link to="/how-it-works" className="text-sm font-medium hover:text-swapspace-green-DEFAULT">
             How It Works
           </Link>
+          <Link to="/add-item" className="text-sm font-medium hover:text-swapspace-green-DEFAULT">
+            Add Item
+          </Link>
         </nav>
 
         <div className="flex items-center gap-4">
           {isLoggedIn ? (
             <>
-              <Button asChild variant="outline">
-                <Link to="/add-item">Add Item</Link>
+              <Button asChild variant="outline" className="gap-2">
+                <Link to="/add-item"><PlusCircle className="h-4 w-4" /> Add Item</Link>
               </Button>
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
@@ -82,11 +91,14 @@ const Navbar = () => {
             </>
           ) : (
             <>
-              <Button asChild variant="ghost" className="hidden md:inline-flex">
+              <Button asChild variant="ghost" className="hidden md:inline-flex" onClick={handleLogin}>
                 <Link to="/login">Login</Link>
               </Button>
               <Button asChild className="hidden md:inline-flex">
                 <Link to="/signup">Sign Up</Link>
+              </Button>
+              <Button asChild variant="outline" className="gap-2">
+                <Link to="/add-item"><PlusCircle className="h-4 w-4" /> Add Item</Link>
               </Button>
             </>
           )}
@@ -107,11 +119,11 @@ const Navbar = () => {
               <DropdownMenuItem asChild>
                 <Link to="/how-it-works">How It Works</Link>
               </DropdownMenuItem>
+              <DropdownMenuItem asChild>
+                <Link to="/add-item">Add Item</Link>
+              </DropdownMenuItem>
               {isLoggedIn ? (
                 <>
-                  <DropdownMenuItem asChild>
-                    <Link to="/add-item">List an Item</Link>
-                  </DropdownMenuItem>
                   <DropdownMenuItem asChild>
                     <Link to="/profile">My Profile</Link>
                   </DropdownMenuItem>

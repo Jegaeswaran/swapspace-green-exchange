@@ -6,7 +6,6 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Select } from "@/components/ui/select";
 import { toast } from "sonner";
 
 const categories = [
@@ -39,17 +38,12 @@ const AddItem = () => {
     setLoading(true);
 
     try {
-      const response = await fetch("http://localhost:4000/api/items", {
-        method: "POST",
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          ...form,
-          ownerId: 'user1', // This should come from auth context in production
-          ownerName: 'Demo User' // This should come from auth context in production
-        })
-      });
-
-      if (!response.ok) throw new Error("Failed to add item");
+      // For demonstration purposes, we'll use a mock API endpoint
+      // In a real app, this would be a server API call
+      console.log("Submitted form data:", form);
+      
+      // Simulate API call
+      await new Promise(resolve => setTimeout(resolve, 1000));
       
       toast.success("Item added successfully!");
       navigate('/profile');
